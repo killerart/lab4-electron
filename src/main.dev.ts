@@ -125,7 +125,7 @@ let smtpClient: any = null;
 
 function openImapConnection(
   event: Electron.IpcMainEvent,
-  user: { email: any; password: any },
+  user: any,
   callback: () => void
 ) {
   if (imapClient) {
@@ -133,7 +133,7 @@ function openImapConnection(
     return;
   }
 
-  imapClient = inbox.createConnection(false, 'imap.gmail.com', {
+  imapClient = inbox.createConnection(false, user.imap, {
     secureConnection: true,
     auth: {
       user: user.email,
@@ -165,14 +165,14 @@ function closeImapConnection() {
   }
 }
 
-function openSmtpConnection(user: { email: string; password: string }) {
+function openSmtpConnection(user: any) {
   if (smtpClient) {
     return;
   }
 
   smtpClient = smtp.createTransport({
-    host: 'smtp.gmail.com',
-    port: 587,
+    host: user.smtp,
+    port: user.smtpPort ?? undefined,
     auth: {
       user: user.email,
       pass: user.password,

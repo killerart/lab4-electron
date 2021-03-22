@@ -9,7 +9,10 @@ export default function Login({ setUser, setErrorMessage, errorMessage }) {
       const formData = new FormData(event.target);
       const email = formData.get('email');
       const password = formData.get('password');
-      const user = { email, password };
+      const smtp = formData.get('smtp');
+      const smtpPort = formData.get('smtpPort');
+      const imap = formData.get('imap');
+      const user = { email, password, smtp, smtpPort, imap };
       setUser(user);
       setErrorMessage('');
     },
@@ -34,6 +37,38 @@ export default function Login({ setUser, setErrorMessage, errorMessage }) {
                 label="Password"
                 type="password"
                 name="password"
+                outline
+                validate
+                required
+              />
+              <Row className="mb-4">
+                <Col>
+                  <MDBInput
+                    valueDefault="smtp.gmail.com"
+                    label="SMTP Server"
+                    type="text"
+                    name="smtp"
+                    outline
+                    validate
+                    required
+                  />
+                </Col>
+                <Col>
+                  <MDBInput
+                    valueDefault={587}
+                    type="number"
+                    label="SMTP Port"
+                    name="smtpPort"
+                    outline
+                    validate
+                  />
+                </Col>
+              </Row>
+              <MDBInput
+                valueDefault="imap.gmail.com"
+                label="IMAP Server"
+                type="text"
+                name="imap"
                 outline
                 validate
                 required
