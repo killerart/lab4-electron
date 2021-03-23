@@ -147,6 +147,7 @@ ipcMain.handle(
     await imapClient.openConnection(credentials, (message) =>
       event.sender.send(Actions.NEW_MESSAGE, message)
     );
+
     const messages = await imapClient.listMessages(-100);
     return messages.reverse();
   }

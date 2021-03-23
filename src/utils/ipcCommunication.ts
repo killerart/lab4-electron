@@ -6,6 +6,4 @@ export enum Actions {
   SEND_MESSAGE = 'SEND_MESSAGE',
 }
 
-export enum Errors {
-  LOGIN_FAILED = 'LOGIN_FAILED',
-}
+export default Actions;
