@@ -40,7 +40,7 @@ export default class ImapClient {
       this.imap.once('connect', () => resolve());
 
       this.imap.on('error', (error: Error) => {
-        // closeImapConnection();
+        this.closeConnection();
         reject(error);
       });
 
@@ -68,6 +68,7 @@ export default class ImapClient {
     return new Promise<MessageHeaders[]>((resolve, reject) => {
       this.imap.openMailbox(mailbox, (error: Error) => {
         if (error) reject(error);
+
         this.imap.listMessages(
           from,
           limit,
@@ -98,6 +99,7 @@ export default class ImapClient {
     return new Promise<void>((resolve, reject) => {
       this.imap.openMailbox(mailbox, (error: Error) => {
         if (error) reject(error);
+
         this.imap.addFlags(uid, ['\\Seen'], (error: Error) => {
           if (error) reject(error);
           resolve();

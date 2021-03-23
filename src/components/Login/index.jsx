@@ -1,4 +1,5 @@
 import React, { useCallback } from 'react';
+import PropTypes from 'prop-types';
 import { MDBAnimation, MDBBtn, MDBInput } from 'mdbreact';
 import { Col, Container, Form, Row } from 'reactstrap';
 
@@ -90,3 +91,9 @@ export default function Login({
     </MDBAnimation>
   );
 }
+
+Login.propTypes = {
+  setCredentials: PropTypes.func.isRequired,
+  setErrorMessage: PropTypes.func.isRequired,
+  errorMessage: PropTypes.string,
+};

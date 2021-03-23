@@ -1,5 +1,6 @@
 import { ipcRenderer } from 'electron';
 import React, { useCallback, useEffect, useState } from 'react';
+import PropTypes from 'prop-types';
 import Loader from 'react-loader-spinner';
 import { Col, Row } from 'reactstrap';
 import ReactHtmlParser from 'react-html-parser';
@@ -7,12 +8,7 @@ import { MDBAnimation } from 'mdbreact';
 import { Actions } from '../../utils/ipcCommunication';
 import './index.css';
 
-export default function Message({
-  credentials,
-  match,
-  logout,
-  setErrorMessage,
-}) {
+export default function Message({ credentials, match, logout }) {
   const [message, setMessage] = useState();
 
   useEffect(() => {
@@ -30,10 +26,9 @@ export default function Message({
         setMessage(message);
       })
       .catch((error) => {
-        logout();
-        setErrorMessage(error.message);
+        logout(error.message);
       });
-  }, [match, credentials, logout, setErrorMessage]);
+  }, [match, credentials, logout]);
 
   const renderMessage = useCallback(() => {
     const { html, textAsHtml, text } = message;
@@ -78,3 +73,9 @@ export default function Message({
     </Row>
   );
 }
+
+Message.propTypes = {
+  credentials: PropTypes.object.isRequired,
+  match: PropTypes.object.isRequired,
+  logout: PropTypes.func.isRequired,
+};

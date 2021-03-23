@@ -15,11 +15,15 @@ function App() {
   const [selectedMessageUID, setSelectedMessageUID] = useState();
   const [errorMessage, setErrorMessage] = useState();
 
-  const logout = useCallback(() => {
-    ipcRenderer.invoke(Actions.LOGOUT);
-    removeCredentials();
-    setSelectedMessageUID(undefined);
-  }, [removeCredentials]);
+  const logout = useCallback(
+    (errorMessage) => {
+      ipcRenderer.invoke(Actions.LOGOUT);
+      removeCredentials();
+      setErrorMessage(errorMessage);
+      setSelectedMessageUID(undefined);
+    },
+    [removeCredentials]
+  );
 
   if (!credentials) {
     return (
@@ -40,12 +44,11 @@ function App() {
             logout={logout}
             selectedMessageUID={selectedMessageUID}
             setSelectedMessageUID={setSelectedMessageUID}
-            setErrorMessage={setErrorMessage}
           >
             <Route
               path="/message/:uid"
               component={(props) => (
-                <Message credentials={credentials} {...props} />
+                <Message credentials={credentials} logout={logout} {...props} />
               )}
             />
             <Route
@@ -55,7 +58,6 @@ function App() {
                   credentials={credentials}
                   setSelectedMessageUID={setSelectedMessageUID}
                   logout={logout}
-                  setErrorMessage={setErrorMessage}
                   {...props}
                 />
               )}

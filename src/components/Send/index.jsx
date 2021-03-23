@@ -1,11 +1,12 @@
 import { ipcRenderer } from 'electron';
-import { MDBAnimation, MDBInput, MDBBtn } from 'mdbreact';
 import React, { useCallback, useState } from 'react';
+import PropTypes from 'prop-types';
+import { MDBAnimation, MDBInput, MDBBtn } from 'mdbreact';
 import { Row, Col, Form } from 'reactstrap';
 import { Actions } from '../../utils/ipcCommunication';
 import './index.css';
 
-export default function Send({ credentials, logout, setErrorMessage }) {
+export default function Send({ credentials, logout }) {
   const [sent, setSent] = useState();
   const [to, setTo] = useState();
   const [subject, setSubject] = useState();
@@ -19,11 +20,10 @@ export default function Send({ credentials, logout, setErrorMessage }) {
         .invoke(Actions.SEND_MESSAGE, credentials, message)
         .then(() => setSent(true))
         .catch((error) => {
-          logout();
-          setErrorMessage(error.message);
+          logout(error.message);
         });
     },
-    [to, subject, text, credentials, logout, setErrorMessage]
+    [to, subject, text, credentials, logout]
   );
 
   const onAnimationEnd = useCallback(() => {
@@ -77,3 +77,8 @@ export default function Send({ credentials, logout, setErrorMessage }) {
     </MDBAnimation>
   );
 }
+
+Send.propTypes = {
+  credentials: PropTypes.object.isRequired,
+  logout: PropTypes.func.isRequired,
+};

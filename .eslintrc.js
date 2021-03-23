@@ -3,7 +3,9 @@ module.exports = {
   rules: {
     // A temporary hack related to IDE not resolving correct package.json
     'import/no-extraneous-dependencies': 'off',
-    'react/prop-types': 0,
+    // 'react/prop-types': 0,
+    'react/forbid-prop-types': 'off',
+    'react/require-default-props': 'off',
     'no-shadow': 'off',
     '@typescript-eslint/no-shadow': 'off',
     'no-plusplus': 'off',

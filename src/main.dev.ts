@@ -162,11 +162,6 @@ ipcMain.handle(Actions.GET_MESSAGE, async (event, credentials, uid) => {
   return message;
 });
 
-ipcMain.handle(Actions.LOGOUT, () => {
-  imapClient.closeConnection();
-  smtpClient.closeConnection();
-});
-
 ipcMain.handle(
   Actions.SEND_MESSAGE,
   (_event, credentials: SmtpCredentials, message: Mail.Options) => {
@@ -176,3 +171,8 @@ ipcMain.handle(
     return smtpClient.sendMail(message);
   }
 );
+
+ipcMain.handle(Actions.LOGOUT, () => {
+  imapClient.closeConnection();
+  smtpClient.closeConnection();
+});

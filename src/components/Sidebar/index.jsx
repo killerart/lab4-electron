@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import {
   MDBBtn,
   MDBMask,
@@ -54,9 +55,8 @@ class Sidebar extends React.Component {
   };
 
   onError = (error) => {
-    const { logout, setErrorMessage } = this.props;
-    logout();
-    setErrorMessage(error.message);
+    const { logout } = this.props;
+    logout(error.message);
   };
 
   onMessageClick = (message) => {
@@ -160,7 +160,10 @@ class Sidebar extends React.Component {
                 </MDBNavLink>
               </MDBNavItem>
               <MDBNavItem>
-                <MDBBtn className="btn btn-light btn-sm" onClick={logout}>
+                <MDBBtn
+                  className="btn btn-light btn-sm"
+                  onClick={() => logout()}
+                >
                   Logout
                 </MDBBtn>
               </MDBNavItem>
@@ -173,5 +176,14 @@ class Sidebar extends React.Component {
     );
   }
 }
+
+Sidebar.propTypes = {
+  credentials: PropTypes.object.isRequired,
+  logout: PropTypes.func.isRequired,
+  selectedMessageUID: PropTypes.number,
+  setSelectedMessageUID: PropTypes.func.isRequired,
+  children: PropTypes.arrayOf(PropTypes.element).isRequired,
+  history: PropTypes.object.isRequired,
+};
 
 export default withRouter(Sidebar);

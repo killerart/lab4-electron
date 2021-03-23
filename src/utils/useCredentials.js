@@ -6,16 +6,16 @@ export default function useCredentials() {
     return JSON.parse(credentialsJson);
   };
 
-  const [credentials, setToken] = useState(getCredentials());
+  const [credentials, setCredentials] = useState(getCredentials());
 
   const saveCredentials = useCallback((credentials) => {
     localStorage.setItem('credentials', JSON.stringify(credentials));
-    setToken(credentials);
+    setCredentials(credentials);
   }, []);
 
   const removeCredentials = useCallback(() => {
     localStorage.removeItem('credentials');
-    setToken(undefined);
+    setCredentials(undefined);
   }, []);
 
   return [credentials, saveCredentials, removeCredentials];
