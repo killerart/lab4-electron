@@ -5,7 +5,7 @@ import { Row, Col, Form } from 'reactstrap';
 import { Actions } from '../../utils/ipcCommunication';
 import './index.css';
 
-export default function Send({ user }) {
+export default function Send({ credentials, logout, setErrorMessage }) {
   const [sent, setSent] = useState();
   const [to, setTo] = useState();
   const [subject, setSubject] = useState();
@@ -16,18 +16,17 @@ export default function Send({ user }) {
       event.preventDefault();
       const message = { to, subject, text };
       ipcRenderer
-        .invoke(Actions.SEND_MESSAGE, user, message)
-        .then(() => {
-          setSent(true);
-          return true;
-        })
-        .catch(() => {});
+        .invoke(Actions.SEND_MESSAGE, credentials, message)
+        .then(() => setSent(true))
+        .catch((error) => {
+          logout();
+          setErrorMessage(error.message);
+        });
     },
-    [subject, text, to, user]
+    [to, subject, text, credentials, logout, setErrorMessage]
   );
 
   const onAnimationEnd = useCallback(() => {
-    console.log('animation ended');
     setSent(false);
     setTo('');
     setSubject('');

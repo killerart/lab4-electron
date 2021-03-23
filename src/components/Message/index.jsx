@@ -7,26 +7,33 @@ import { MDBAnimation } from 'mdbreact';
 import { Actions } from '../../utils/ipcCommunication';
 import './index.css';
 
-export default function Message({ user, match }) {
+export default function Message({
+  credentials,
+  match,
+  logout,
+  setErrorMessage,
+}) {
   const [message, setMessage] = useState();
 
   useEffect(() => {
     const { uid } = match.params;
 
-    ipcRenderer.on(Actions.GET_MESSAGE, (event, message) => {
-      if (message.html) {
-        message.html = message.html.replace(
-          /(="?)(\/\/)/g,
-          (_, x, y) => `${x}http:${y}`
-        );
-      }
-      setMessage(message);
-    });
-
-    ipcRenderer.send(Actions.GET_MESSAGE, user, uid);
-
-    return () => ipcRenderer.removeAllListeners(Actions.GET_MESSAGE);
-  }, [match.params, user]);
+    ipcRenderer
+      .invoke(Actions.GET_MESSAGE, credentials, uid)
+      .then((message) => {
+        if (message.html) {
+          message.html = message.html.replace(
+            /(="?)(\/\/)/g,
+            (_, x, y) => `${x}http:${y}`
+          );
+        }
+        setMessage(message);
+      })
+      .catch((error) => {
+        logout();
+        setErrorMessage(error.message);
+      });
+  }, [match, credentials, logout, setErrorMessage]);
 
   const renderMessage = useCallback(() => {
     const { html, textAsHtml, text } = message;

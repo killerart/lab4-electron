@@ -21,7 +21,7 @@ import './index.css';
 import { ipcRenderer } from 'electron';
 import Loader from 'react-loader-spinner';
 import { withRouter } from 'react-router';
-import { Actions, Errors } from '../../utils/ipcCommunication';
+import { Actions } from '../../utils/ipcCommunication';
 
 class Sidebar extends React.Component {
   constructor(props) {
@@ -32,29 +32,32 @@ class Sidebar extends React.Component {
   }
 
   componentDidMount() {
-    const { user, logout, setErrorMessage } = this.props;
-    ipcRenderer.on(Actions.GET_ALL_MESSAGES, (event, parsedMessages) => {
-      this.setState({ messages: parsedMessages ?? [] });
-    });
-    ipcRenderer.send(Actions.GET_ALL_MESSAGES, user);
+    const { credentials } = this.props;
+    ipcRenderer
+      .invoke(Actions.GET_ALL_MESSAGES, credentials)
+      .then((parsedMessages) => {
+        this.setState({ messages: parsedMessages ?? [] });
+      })
+      .catch(this.onError);
 
-    ipcRenderer.on(Errors.LOGIN_FAILED, (event, errorMessage) => {
-      logout();
-      setErrorMessage(errorMessage);
-    });
-
-    ipcRenderer.on(Actions.NEW_MESSAGE, (event, message) => {
-      const { messages } = this.state;
-      messages.unshift(message);
-      this.setState({ messages });
-    });
+    ipcRenderer.on(Actions.NEW_MESSAGE, this.onNewMessage);
   }
 
   componentWillUnmount() {
-    ipcRenderer.removeAllListeners(Actions.GET_ALL_MESSAGES);
-    ipcRenderer.removeAllListeners(Errors.LOGIN_FAILED);
-    ipcRenderer.removeAllListeners(Actions.NEW_MESSAGE);
+    ipcRenderer.removeListener(Actions.NEW_MESSAGE, this.onNewMessage);
   }
+
+  onNewMessage = (event, message) => {
+    const { messages } = this.state;
+    messages.unshift(message);
+    this.setState({ messages });
+  };
+
+  onError = (error) => {
+    const { logout, setErrorMessage } = this.props;
+    logout();
+    setErrorMessage(error.message);
+  };
 
   onMessageClick = (message) => {
     const { selectedMessageUID, setSelectedMessageUID, history } = this.props;
@@ -68,7 +71,7 @@ class Sidebar extends React.Component {
   render() {
     const { messages } = this.state;
     const {
-      user,
+      credentials,
       logout,
       selectedMessageUID,
       setSelectedMessageUID,
@@ -145,7 +148,7 @@ class Sidebar extends React.Component {
         <div className="page-content">
           <MDBNavbar expand className="absolute-navbar bg-light">
             <MDBNavbarNav className="align-items-center">
-              <MDBNavItem>{user.email}</MDBNavItem>
+              <MDBNavItem>{credentials.email}</MDBNavItem>
               <MDBNavItem>
                 <MDBNavLink
                   to="/send"

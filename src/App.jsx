@@ -2,29 +2,29 @@ import React, { useCallback, useState } from 'react';
 import { BrowserRouter, Route, Redirect, Switch } from 'react-router-dom';
 import { ipcRenderer } from 'electron';
 import Login from './components/Login';
-import useUser from './utils/useUser';
 import Sidebar from './components/Sidebar';
 import Logout from './components/Logout';
 import Message from './components/Message';
-import { Actions } from './utils/ipcCommunication';
 import Send from './components/Send';
+import useCredentials from './utils/useCredentials';
+import { Actions } from './utils/ipcCommunication';
 import './App.css';
 
 function App() {
-  const [user, setUser, removeUser] = useUser();
+  const [credentials, setCredentials, removeCredentials] = useCredentials();
   const [selectedMessageUID, setSelectedMessageUID] = useState();
   const [errorMessage, setErrorMessage] = useState();
 
   const logout = useCallback(() => {
     ipcRenderer.invoke(Actions.LOGOUT);
-    removeUser();
+    removeCredentials();
     setSelectedMessageUID(undefined);
-  }, [removeUser]);
+  }, [removeCredentials]);
 
-  if (!user) {
+  if (!credentials) {
     return (
       <Login
-        setUser={setUser}
+        setCredentials={setCredentials}
         errorMessage={errorMessage}
         setErrorMessage={setErrorMessage}
       />
@@ -36,7 +36,7 @@ function App() {
       <BrowserRouter>
         <Switch>
           <Sidebar
-            user={user}
+            credentials={credentials}
             logout={logout}
             selectedMessageUID={selectedMessageUID}
             setSelectedMessageUID={setSelectedMessageUID}
@@ -44,14 +44,18 @@ function App() {
           >
             <Route
               path="/message/:uid"
-              component={(props) => <Message user={user} {...props} />}
+              component={(props) => (
+                <Message credentials={credentials} {...props} />
+              )}
             />
             <Route
               path="/send"
               component={(props) => (
                 <Send
-                  user={user}
+                  credentials={credentials}
                   setSelectedMessageUID={setSelectedMessageUID}
+                  logout={logout}
+                  setErrorMessage={setErrorMessage}
                   {...props}
                 />
               )}

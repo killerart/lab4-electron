@@ -12,6 +12,7 @@ module.exports = {
     'no-nested-ternary': 'off',
     'no-octal-escape': 'off',
     'no-console': 'off',
+    'promise/always-return': 'off',
   },
   parserOptions: {
     ecmaVersion: 2020,

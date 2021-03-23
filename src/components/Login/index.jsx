@@ -2,21 +2,25 @@ import React, { useCallback } from 'react';
 import { MDBAnimation, MDBBtn, MDBInput } from 'mdbreact';
 import { Col, Container, Form, Row } from 'reactstrap';
 
-export default function Login({ setUser, setErrorMessage, errorMessage }) {
+export default function Login({
+  setCredentials,
+  setErrorMessage,
+  errorMessage,
+}) {
   const onSubmit = useCallback(
     (event) => {
       event.preventDefault();
       const formData = new FormData(event.target);
       const email = formData.get('email');
       const password = formData.get('password');
-      const smtp = formData.get('smtp');
+      const smtpServer = formData.get('smtpServer');
       const smtpPort = formData.get('smtpPort');
-      const imap = formData.get('imap');
-      const user = { email, password, smtp, smtpPort, imap };
-      setUser(user);
+      const imapServer = formData.get('imapServer');
+      const credentials = { email, password, smtpServer, smtpPort, imapServer };
+      setCredentials(credentials);
       setErrorMessage('');
     },
-    [setErrorMessage, setUser]
+    [setErrorMessage, setCredentials]
   );
 
   return (
@@ -47,7 +51,7 @@ export default function Login({ setUser, setErrorMessage, errorMessage }) {
                     valueDefault="smtp.gmail.com"
                     label="SMTP Server"
                     type="text"
-                    name="smtp"
+                    name="smtpServer"
                     outline
                     validate
                     required
@@ -68,7 +72,7 @@ export default function Login({ setUser, setErrorMessage, errorMessage }) {
                 valueDefault="imap.gmail.com"
                 label="IMAP Server"
                 type="text"
-                name="imap"
+                name="imapServer"
                 outline
                 validate
                 required

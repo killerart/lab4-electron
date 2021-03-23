@@ -9,17 +9,15 @@
  * When running `yarn build` or `yarn build-main`, this file is compiled to
  * `./src/main.prod.js` using webpack. This gives us some performance wins.
  */
-import 'core-js/stable';
-import 'regenerator-runtime/runtime';
 import path from 'path';
 import { app, BrowserWindow, ipcMain, shell } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
-import inbox from 'inbox-2';
-import { simpleParser } from 'mailparser';
-import smtp from 'nodemailer';
+import Mail from 'nodemailer/lib/mailer';
 import MenuBuilder from './menu';
-import { Actions, Errors } from './utils/ipcCommunication';
+import { Actions } from './utils/ipcCommunication';
+import ImapClient, { ImapCredentials } from './network/ImapClient';
+import SmtpClient, { SmtpCredentials } from './network/SmtpClient';
 
 export default class AppUpdater {
   constructor() {
@@ -119,83 +117,15 @@ const createWindow = async () => {
 /**
  * Add event listeners...
  */
-
-let imapClient: any = null;
-let smtpClient: any = null;
-
-function openImapConnection(
-  event: Electron.IpcMainEvent,
-  user: any,
-  callback: () => void
-) {
-  if (imapClient) {
-    callback();
-    return;
-  }
-
-  imapClient = inbox.createConnection(false, user.imap, {
-    secureConnection: true,
-    auth: {
-      user: user.email,
-      pass: user.password,
-    },
-  });
-
-  imapClient.once('connect', callback);
-
-  imapClient.once('error', (error: any) => {
-    console.error(error);
-    event.reply(Errors.LOGIN_FAILED, 'Invalid credentials');
-  });
-
-  imapClient.on('new', (message: any) => {
-    event.reply(Actions.NEW_MESSAGE, message);
-  });
-
-  imapClient.connect();
-}
-
-function closeImapConnection() {
-  try {
-    imapClient?.close();
-  } catch (error) {
-    console.error(error);
-  } finally {
-    imapClient = null;
-  }
-}
-
-function openSmtpConnection(user: any) {
-  if (smtpClient) {
-    return;
-  }
-
-  smtpClient = smtp.createTransport({
-    host: user.smtp,
-    port: user.smtpPort ?? undefined,
-    auth: {
-      user: user.email,
-      pass: user.password,
-    },
-  });
-}
-
-function closeSmtpConnection() {
-  try {
-    smtpClient?.close();
-  } catch (error) {
-    console.error(error);
-  } finally {
-    smtpClient = null;
-  }
-}
+const imapClient = new ImapClient();
+const smtpClient = new SmtpClient();
 
 app.on('window-all-closed', () => {
   // Respect the OSX convention of having the application in memory even
   // after all windows have been closed
   if (process.platform !== 'darwin') {
-    closeImapConnection();
-    closeSmtpConnection();
+    imapClient.closeConnection();
+    smtpClient.closeConnection();
     app.quit();
   }
 });
@@ -208,41 +138,41 @@ app.on('activate', () => {
   if (mainWindow === null) createWindow();
 });
 
-ipcMain.on(Actions.GET_ALL_MESSAGES, (event, user) => {
-  const getMessages = () => {
-    imapClient.openMailbox('INBOX', (error: any) => {
-      if (error) console.error(error);
-      imapClient.listMessages(-100, (_: any, messages: any[]) =>
-        event.reply(Actions.GET_ALL_MESSAGES, messages.reverse())
-      );
-    });
-  };
+/**
+ * Network events...
+ */
+ipcMain.handle(
+  Actions.GET_ALL_MESSAGES,
+  async (event, credentials: ImapCredentials) => {
+    await imapClient.openConnection(credentials, (message) =>
+      event.sender.send(Actions.NEW_MESSAGE, message)
+    );
+    const messages = await imapClient.listMessages(-100);
+    return messages.reverse();
+  }
+);
 
-  openImapConnection(event, user, getMessages);
-});
+ipcMain.handle(Actions.GET_MESSAGE, async (event, credentials, uid) => {
+  await imapClient.openConnection(credentials, (message) =>
+    event.sender.send(Actions.NEW_MESSAGE, message)
+  );
 
-ipcMain.on(Actions.GET_MESSAGE, (event, user, uid) => {
-  const getMessage = () => {
-    imapClient.openMailbox('INBOX', async (error: any) => {
-      if (error) console.error(error);
-      const message = await simpleParser(imapClient.createMessageStream(uid));
-      event.reply(Actions.GET_MESSAGE, message);
-      imapClient.addFlags(uid, ['\\Seen'], () => {});
-    });
-  };
-
-  openImapConnection(event, user, getMessage);
+  const message = await imapClient.getMessage(uid);
+  await imapClient.addSeenFlag(uid);
+  return message;
 });
 
 ipcMain.handle(Actions.LOGOUT, () => {
-  closeImapConnection();
-  closeSmtpConnection();
+  imapClient.closeConnection();
+  smtpClient.closeConnection();
 });
 
-ipcMain.handle(Actions.SEND_MESSAGE, (_event, user, message) => {
-  openSmtpConnection(user);
+ipcMain.handle(
+  Actions.SEND_MESSAGE,
+  (_event, credentials: SmtpCredentials, message: Mail.Options) => {
+    smtpClient.openConnection(credentials);
 
-  message.from = user.email;
-
-  return smtpClient.sendMail(message);
-});
+    message.from = credentials.email;
+    return smtpClient.sendMail(message);
+  }
+);
